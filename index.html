@@ -171,7 +171,7 @@
 
           if (item.keyword) {
             resultItem.innerHTML = `
-              <h2>${item.keyword}</h2>
+              <h2>Keyword: ${item.keyword}</h2>
               <p>Product Count: ${item.info?.productCount ?? 'N/A'}</p>
               <p>Facet Count: ${item.info?.facetCount ?? 'N/A'}</p>
               <p>Taxonomy Facet Count: ${item.info?.taxonomyFacetCount ?? 'N/A'}</p>
@@ -181,7 +181,7 @@
             `;
           } else {
             resultItem.innerHTML = `
-              <h2><a href="${item.collection}" class="collection-link">${item.collection}</a></h2>
+              <h2><a href="${item.collection}" class="collection-link" target="_blank">${item.collection}</a></h2>
               <p>Taxonomy: ${item.taxonomy}</p>
               <p>Product Count: ${item.info?.productCount ?? 'N/A'}</p>
               <p>Facet Count: ${item.info?.facetCount ?? 'N/A'}</p>
