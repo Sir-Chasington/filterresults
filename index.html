@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Results Filter</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f0f2f5;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      color: #4CAF50;
+    }
+    #filterKeyword {
+        width: 25%;
+        height: 20px;
+    }
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      margin-top: 20px;
+    }
+    .filter-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .filter-group input[type="text"],
+    .filter-group input[type="number"],
+    .filter-group select {
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-bottom: 10px;
+    }
+    .filter-box {
+      border: 1px solid #add8e6;
+      border-radius: 4px;
+      padding: 10px;
+      display: flex;
+      gap: 10px;
+      background-color: #f0f8ff;
+    }
+    .error {
+      color: red;
+      font-size: 14px;
+    }
+    .counts {
+      display: flex;
+      justify-content: flex-start;
+      width: 100%;
+      margin-bottom: 20px;
+      font-size: 16px;
+    }
+    .counts span {
+      margin-right: 20px;
+    }
+    .results {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .result-item {
+      width: calc(21% - 10px);
+      background-color: #fff;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .result-item h2 {
+      margin: 0;
+      font-size: 20px;
+      color: #4CAF50;
+    }
+    .result-item p {
+      margin: 5px 0;
+    }
+    .collection-link {
+      font-size: 14px;
+      color: #007bff;
+      text-decoration: none;
+    }
+    .collection-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Filter Results</h1>
+    <div class="filter-group">
+      <input type="text" id="filterKeyword" placeholder="Filter by keyword or collection">
+      <div class="filter-box">
+        <select id="filterSelect">
+          <option value="">Select an info item</option>
+          <option value="productCount">Product Count</option>
+          <option value="facetCount">Facet Count</option>
+          <option value="taxonomyFacetCount">Taxonomy Facet Count</option>
+          <option value="totalResults">Total Results</option>
+          <option value="outOfStockCount">Out of Stock Count</option>
+          <option value="apiCallTime">API Call Time</option>
+        </select>
+        <input type="number" id="filterNumber" placeholder="Number less than...">
+      </div>
+    </div>
+    <div id="error" class="error"></div>
+    <div class="counts">
+      <span id="totalCount">Total: 0</span>
+      <span id="keywordCount">Keywords: 0</span>
+      <span id="collectionCount">Collections: 0</span>
+    </div>
+    <div class="results" id="results"></div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const resultsContainer = document.getElementById('results');
+      const filterKeywordInput = document.getElementById('filterKeyword');
+      const filterSelect = document.getElementById('filterSelect');
+      const filterNumberInput = document.getElementById('filterNumber');
+      const errorDiv = document.getElementById('error');
+      const totalCountSpan = document.getElementById('totalCount');
+      const keywordCountSpan = document.getElementById('keywordCount');
+      const collectionCountSpan = document.getElementById('collectionCount');
+
+      // Fetch data from results.json
+      fetch('http://localhost:8000/results.json')
+        .then(response => response.json())
+        .then(data => {
+          updateCounts(data);
+          displayResults(data);
+
+          // Add event listeners for filters
+          filterKeywordInput.addEventListener('input', () => filterResults(data));
+          filterSelect.addEventListener('change', () => filterResults(data));
+          filterNumberInput.addEventListener('input', () => filterResults(data));
+        });
+
+      // Update counts function
+      function updateCounts(data) {
+        const total = data.length;
+        const keywords = data.filter(item => item.keyword).length;
+        const collections = data.filter(item => item.collection).length;
+
+        totalCountSpan.textContent = `Total: ${total}`;
+        keywordCountSpan.textContent = `Keywords: ${keywords}`;
+        collectionCountSpan.textContent = `Collections: ${collections}`;
+      }
+
+      // Display results function
+      function displayResults(data) {
+        resultsContainer.innerHTML = '';
+        data.forEach(item => {
+          const resultItem = document.createElement('div');
+          resultItem.className = 'result-item';
+
+          if (item.keyword) {
+            resultItem.innerHTML = `
+              <h2>${item.keyword}</h2>
+              <p>Product Count: ${item.info?.productCount ?? 'N/A'}</p>
+              <p>Facet Count: ${item.info?.facetCount ?? 'N/A'}</p>
+              <p>Taxonomy Facet Count: ${item.info?.taxonomyFacetCount ?? 'N/A'}</p>
+              <p>Total Results: ${item.info?.totalResults ?? 'N/A'}</p>
+              <p>Out of Stock Count: ${item.info?.outOfStockCount ?? 'N/A'}</p>
+              <p>API Call Time: ${item.info?.apiCallTime ?? 'N/A'} ms</p>
+            `;
+          } else {
+            resultItem.innerHTML = `
+              <h2><a href="${item.collection}" class="collection-link">${item.collection}</a></h2>
+              <p>Taxonomy: ${item.taxonomy}</p>
+              <p>Product Count: ${item.info?.productCount ?? 'N/A'}</p>
+              <p>Facet Count: ${item.info?.facetCount ?? 'N/A'}</p>
+              <p>Taxonomy Facet Count: ${item.info?.taxonomyFacetCount ?? 'N/A'}</p>
+              <p>Total Results: ${item.info?.totalResults ?? 'N/A'}</p>
+              <p>Out of Stock Count: ${item.info?.outOfStockCount ?? 'N/A'}</p>
+              <p>API Call Time: ${item.info?.apiCallTime ?? 'N/A'} ms</p>
+            `;
+          }
+
+          resultsContainer.appendChild(resultItem);
+        });
+      }
+
+      // Filter results function
+      function filterResults(data) {
+        const keyword = filterKeywordInput.value.toLowerCase();
+        const selectedInfoItem = filterSelect.value;
+        const number = parseInt(filterNumberInput.value, 10);
+
+        errorDiv.textContent = '';
+
+        if (filterNumberInput.value !== '' && selectedInfoItem === '') {
+          errorDiv.textContent = 'Please select an info item to filter by.';
+          return;
+        }
+
+        const filteredData = data.filter(item => {
+          const matchesKeyword = (item.keyword && item.keyword.toLowerCase().includes(keyword)) || 
+                                (item.collection && item.collection.toLowerCase().includes(keyword));
+          const matchesNumber = isNaN(number) || 
+            (item.info && item.info[selectedInfoItem] < number);
+
+          // Return true if the item matches the keyword and number filters
+          return matchesKeyword && (matchesNumber || selectedInfoItem === '');
+        });
+
+        updateCounts(filteredData);
+        displayResults(filteredData);
+      }
+    });
+  </script>
+</body>
+</html>
