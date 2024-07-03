@@ -166,8 +166,8 @@
           filterNumberGreaterThanInput.addEventListener('input', () => filterResults(data));
         });
 
-      // Update counts function
-      function updateCounts(data) {
+            // Update counts function
+            function updateCounts(data) {
         const total = data.length;
         const keywords = data.filter(item => item.keyword).length;
         const collections = data.filter(item => item.collection).length;
@@ -181,6 +181,10 @@
       function displayResults(data) {
         resultsContainer.innerHTML = '';
         data.forEach(item => {
+          const totalResults = item.info?.totalResults ?? 0;
+          const outOfStockCount = item.info?.outOfStockCount ?? 0;
+          const actualTotalResults = totalResults - outOfStockCount;
+
           const resultItem = document.createElement('div');
           resultItem.className = 'result-item';
 
@@ -190,7 +194,9 @@
               <p>Product Count: ${item.info?.productCount ?? 'N/A'}</p>
               <p>Facet Count: ${item.info?.facetCount ?? 'N/A'}</p>
               <p>Taxonomy Facet Count: ${item.info?.taxonomyFacetCount ?? 'N/A'}</p>
-              <p>Total Results: ${item.info?.totalResults ?? 'N/A'}</p>
+              <p>Total Results: ${totalResults}</p>
+              <p>Out of Stock Count: ${outOfStockCount}</p>
+              ${!isNaN(actualTotalResults) ? `<p>Actual Total Results: ${actualTotalResults}</p>` : ''}
               <p>API Call Time: ${item.info?.apiCallTime ?? 'N/A'} ms</p>
             `;
           } else {
@@ -200,8 +206,9 @@
               <p>Product Count: ${item.info?.productCount ?? 'N/A'}</p>
               <p>Facet Count: ${item.info?.facetCount ?? 'N/A'}</p>
               <p>Taxonomy Facet Count: ${item.info?.taxonomyFacetCount ?? 'N/A'}</p>
-              <p>Total Results: ${item.info?.totalResults ?? 'N/A'}</p>
-              <p>Out of Stock Count: ${item.info?.outOfStockCount ?? 'N/A'}</p>
+              <p>Total Results: ${totalResults}</p>
+              <p>Out of Stock Count: ${outOfStockCount}</p>
+              ${!isNaN(actualTotalResults) ? `<p>Actual Total Results: ${actualTotalResults}</p>` : ''}
               <p>API Call Time: ${item.info?.apiCallTime ?? 'N/A'} ms</p>
             `;
           }
@@ -251,3 +258,5 @@
   </script>
 </body>
 </html>
+
+       
