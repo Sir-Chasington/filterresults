@@ -19,7 +19,7 @@
       color: #4CAF50;
     }
     #filterKeyword {
-        width: 25%;
+        width: 22%;
         height: 20px;
     }
     .container {
@@ -53,6 +53,11 @@
       display: flex;
       gap: 10px;
       background-color: #f0f8ff;
+    }
+    .filter-box-column {
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
     }
     .error {
       color: red;
@@ -105,17 +110,23 @@
     <h1>Filter Results</h1>
     <div class="filter-group">
       <input type="text" id="filterKeyword" placeholder="Filter by keyword or collection">
-      <div class="filter-box">
-        <select id="filterSelect">
+      <div class="filter-box filter-box-column">
+        <select id="filterSelectLessThan">
           <option value="">Select an info item</option>
           <option value="productCount">Product Count</option>
           <option value="facetCount">Facet Count</option>
           <option value="taxonomyFacetCount">Taxonomy Facet Count</option>
           <option value="totalResults">Total Results</option>
+        </select>
+        <input type="number" id="filterNumberLessThan" placeholder="Number less than...">
+      </div>
+      <div class="filter-box filter-box-column">
+        <select id="filterSelectGreaterThan">
+          <option value="">Select an info item</option>
           <option value="outOfStockCount">Out of Stock Count</option>
           <option value="apiCallTime">API Call Time</option>
         </select>
-        <input type="number" id="filterNumber" placeholder="Number less than...">
+        <input type="number" id="filterNumberGreaterThan" placeholder="Number greater than...">
       </div>
     </div>
     <div id="error" class="error"></div>
@@ -131,8 +142,10 @@
     document.addEventListener('DOMContentLoaded', function () {
       const resultsContainer = document.getElementById('results');
       const filterKeywordInput = document.getElementById('filterKeyword');
-      const filterSelect = document.getElementById('filterSelect');
-      const filterNumberInput = document.getElementById('filterNumber');
+      const filterSelectLessThan = document.getElementById('filterSelectLessThan');
+      const filterNumberLessThanInput = document.getElementById('filterNumberLessThan');
+      const filterSelectGreaterThan = document.getElementById('filterSelectGreaterThan');
+      const filterNumberGreaterThanInput = document.getElementById('filterNumberGreaterThan');
       const errorDiv = document.getElementById('error');
       const totalCountSpan = document.getElementById('totalCount');
       const keywordCountSpan = document.getElementById('keywordCount');
@@ -147,8 +160,10 @@
 
           // Add event listeners for filters
           filterKeywordInput.addEventListener('input', () => filterResults(data));
-          filterSelect.addEventListener('change', () => filterResults(data));
-          filterNumberInput.addEventListener('input', () => filterResults(data));
+          filterSelectLessThan.addEventListener('change', () => filterResults(data));
+          filterNumberLessThanInput.addEventListener('input', () => filterResults(data));
+          filterSelectGreaterThan.addEventListener('change', () => filterResults(data));
+          filterNumberGreaterThanInput.addEventListener('input', () => filterResults(data));
         });
 
       // Update counts function
@@ -176,7 +191,6 @@
               <p>Facet Count: ${item.info?.facetCount ?? 'N/A'}</p>
               <p>Taxonomy Facet Count: ${item.info?.taxonomyFacetCount ?? 'N/A'}</p>
               <p>Total Results: ${item.info?.totalResults ?? 'N/A'}</p>
-              <p>Out of Stock Count: ${item.info?.outOfStockCount ?? 'N/A'}</p>
               <p>API Call Time: ${item.info?.apiCallTime ?? 'N/A'} ms</p>
             `;
           } else {
@@ -199,24 +213,35 @@
       // Filter results function
       function filterResults(data) {
         const keyword = filterKeywordInput.value.toLowerCase();
-        const selectedInfoItem = filterSelect.value;
-        const number = parseInt(filterNumberInput.value, 10);
+        const selectedInfoItemLessThan = filterSelectLessThan.value;
+        const numberLessThan = parseInt(filterNumberLessThanInput.value, 10);
+        const selectedInfoItemGreaterThan = filterSelectGreaterThan.value;
+        const numberGreaterThan = parseInt(filterNumberGreaterThanInput.value, 10);
 
         errorDiv.textContent = '';
 
-        if (filterNumberInput.value !== '' && selectedInfoItem === '') {
-          errorDiv.textContent = 'Please select an info item to filter by.';
+        if (filterNumberLessThanInput.value !== '' && selectedInfoItemLessThan === '') {
+          errorDiv.textContent = 'Please select an info item for the less than filter.';
+          return;
+        }
+
+        if (filterNumberGreaterThanInput.value !== '' && selectedInfoItemGreaterThan === '') {
+          errorDiv.textContent = 'Please select an info item for the greater than filter.';
           return;
         }
 
         const filteredData = data.filter(item => {
           const matchesKeyword = (item.keyword && item.keyword.toLowerCase().includes(keyword)) || 
                                 (item.collection && item.collection.toLowerCase().includes(keyword));
-          const matchesNumber = isNaN(number) || 
-            (item.info && item.info[selectedInfoItem] < number);
+          const matchesNumberLessThan = isNaN(numberLessThan) || 
+            (item.info && item.info[selectedInfoItemLessThan] < numberLessThan);
+          const matchesNumberGreaterThan = isNaN(numberGreaterThan) || 
+            (item.info && item.info[selectedInfoItemGreaterThan] > numberGreaterThan);
 
           // Return true if the item matches the keyword and number filters
-          return matchesKeyword && (matchesNumber || selectedInfoItem === '');
+          return matchesKeyword && 
+            ((selectedInfoItemLessThan && matchesNumberLessThan) || selectedInfoItemLessThan === '') &&
+            ((selectedInfoItemGreaterThan && matchesNumberGreaterThan) || selectedInfoItemGreaterThan === '');
         });
 
         updateCounts(filteredData);
