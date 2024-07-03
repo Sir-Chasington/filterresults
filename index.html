@@ -139,7 +139,7 @@
       const collectionCountSpan = document.getElementById('collectionCount');
 
       // Fetch data from results.json
-      fetch('http://localhost:8000/results.json')
+      fetch('results.json')
         .then(response => response.json())
         .then(data => {
           updateCounts(data);
