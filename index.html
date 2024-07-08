@@ -19,7 +19,7 @@
       color: #4CAF50;
     }
     #filterKeyword {
-        width: 22%;
+        width: 25%;
         height: 20px;
     }
     .container {
@@ -53,11 +53,6 @@
       display: flex;
       gap: 10px;
       background-color: #f0f8ff;
-    }
-    .filter-box-column {
-      display: flex;
-      flex-direction: row;
-      gap: 10px;
     }
     .error {
       color: red;
@@ -103,30 +98,37 @@
     .collection-link:hover {
       text-decoration: underline;
     }
+    .file-select {
+      margin-bottom: 20px;
+    }
+    .file-select select {
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Filter Results</h1>
     <div class="filter-group">
+      <select id="fileSelect">
+        <option value="july5-results.json">july5-results</option>
+        <option value="1720454560908_8_7_2024_results.json">1720454560908_8_7_2024_results</option>
+      </select>
       <input type="text" id="filterKeyword" placeholder="Filter by keyword or collection">
-      <div class="filter-box filter-box-column">
-        <select id="filterSelectLessThan">
+      <div class="filter-box">
+        <select id="filterSelect">
           <option value="">Select an info item</option>
           <option value="productCount">Product Count</option>
           <option value="facetCount">Facet Count</option>
           <option value="taxonomyFacetCount">Taxonomy Facet Count</option>
           <option value="totalResults">Total Results</option>
-        </select>
-        <input type="number" id="filterNumberLessThan" placeholder="Number less than...">
-      </div>
-      <div class="filter-box filter-box-column">
-        <select id="filterSelectGreaterThan">
-          <option value="">Select an info item</option>
           <option value="outOfStockCount">Out of Stock Count</option>
           <option value="apiCallTime">API Call Time</option>
         </select>
-        <input type="number" id="filterNumberGreaterThan" placeholder="Number greater than...">
+        <input type="number" id="filterNumber" placeholder="Number less than...">
       </div>
     </div>
     <div id="error" class="error"></div>
@@ -142,32 +144,39 @@
     document.addEventListener('DOMContentLoaded', function () {
       const resultsContainer = document.getElementById('results');
       const filterKeywordInput = document.getElementById('filterKeyword');
-      const filterSelectLessThan = document.getElementById('filterSelectLessThan');
-      const filterNumberLessThanInput = document.getElementById('filterNumberLessThan');
-      const filterSelectGreaterThan = document.getElementById('filterSelectGreaterThan');
-      const filterNumberGreaterThanInput = document.getElementById('filterNumberGreaterThan');
+      const filterSelect = document.getElementById('filterSelect');
+      const filterNumberInput = document.getElementById('filterNumber');
       const errorDiv = document.getElementById('error');
       const totalCountSpan = document.getElementById('totalCount');
       const keywordCountSpan = document.getElementById('keywordCount');
       const collectionCountSpan = document.getElementById('collectionCount');
+      const fileSelect = document.getElementById('fileSelect');
 
-      // Fetch data from results.json
-      fetch('results.json')
-        .then(response => response.json())
-        .then(data => {
-          updateCounts(data);
-          displayResults(data);
+      // Fetch and display data based on selected file
+      function fetchData(file) {
+        fetch(file)
+          .then(response => response.json())
+          .then(data => {
+            updateCounts(data);
+            displayResults(data);
 
-          // Add event listeners for filters
-          filterKeywordInput.addEventListener('input', () => filterResults(data));
-          filterSelectLessThan.addEventListener('change', () => filterResults(data));
-          filterNumberLessThanInput.addEventListener('input', () => filterResults(data));
-          filterSelectGreaterThan.addEventListener('change', () => filterResults(data));
-          filterNumberGreaterThanInput.addEventListener('input', () => filterResults(data));
-        });
+            // Add event listeners for filters
+            filterKeywordInput.addEventListener('input', () => filterResults(data));
+            filterSelect.addEventListener('change', () => filterResults(data));
+            filterNumberInput.addEventListener('input', () => filterResults(data));
+          });
+      }
 
-            // Update counts function
-            function updateCounts(data) {
+      // Initial fetch
+      fetchData(fileSelect.value);
+
+      // Change event for file select
+      fileSelect.addEventListener('change', () => {
+        fetchData(fileSelect.value);
+      });
+
+      // Update counts function
+      function updateCounts(data) {
         const total = data.length;
         const keywords = data.filter(item => item.keyword).length;
         const collections = data.filter(item => item.collection).length;
@@ -181,34 +190,28 @@
       function displayResults(data) {
         resultsContainer.innerHTML = '';
         data.forEach(item => {
-          const totalResults = item.info?.totalResults ?? 0;
-          const outOfStockCount = item.info?.outOfStockCount ?? 0;
-          const actualTotalResults = totalResults - outOfStockCount;
-
           const resultItem = document.createElement('div');
           resultItem.className = 'result-item';
 
           if (item.keyword) {
             resultItem.innerHTML = `
-              <h2>Keyword: ${item.keyword}</h2>
+              <h2>${item.keyword}</h2>
               <p>Product Count: ${item.info?.productCount ?? 'N/A'}</p>
               <p>Facet Count: ${item.info?.facetCount ?? 'N/A'}</p>
               <p>Taxonomy Facet Count: ${item.info?.taxonomyFacetCount ?? 'N/A'}</p>
-              <p>Total Results: ${totalResults}</p>
-              <p>Out of Stock Count: ${outOfStockCount}</p>
-              ${!isNaN(actualTotalResults) ? `<p>Actual Total Results: ${actualTotalResults}</p>` : ''}
+              <p>Total Results: ${item.info?.totalResults ?? 'N/A'}</p>
+              <p>Out of Stock Count: ${item.info?.outOfStockCount ?? 'N/A'}</p>
               <p>API Call Time: ${item.info?.apiCallTime ?? 'N/A'} ms</p>
             `;
           } else {
             resultItem.innerHTML = `
-              <h2><a href="${item.collection}" class="collection-link" target="_blank">${item.collection}</a></h2>
+              <h2><a href="${item.collection}" class="collection-link">${item.collection}</a></h2>
               <p>Taxonomy: ${item.taxonomy}</p>
               <p>Product Count: ${item.info?.productCount ?? 'N/A'}</p>
               <p>Facet Count: ${item.info?.facetCount ?? 'N/A'}</p>
               <p>Taxonomy Facet Count: ${item.info?.taxonomyFacetCount ?? 'N/A'}</p>
-              <p>Total Results: ${totalResults}</p>
-              <p>Out of Stock Count: ${outOfStockCount}</p>
-              ${!isNaN(actualTotalResults) ? `<p>Actual Total Results: ${actualTotalResults}</p>` : ''}
+              <p>Total Results: ${item.info?.totalResults ?? 'N/A'}</p>
+              <p>Out of Stock Count: ${item.info?.outOfStockCount ?? 'N/A'}</p>
               <p>API Call Time: ${item.info?.apiCallTime ?? 'N/A'} ms</p>
             `;
           }
@@ -220,35 +223,24 @@
       // Filter results function
       function filterResults(data) {
         const keyword = filterKeywordInput.value.toLowerCase();
-        const selectedInfoItemLessThan = filterSelectLessThan.value;
-        const numberLessThan = parseInt(filterNumberLessThanInput.value, 10);
-        const selectedInfoItemGreaterThan = filterSelectGreaterThan.value;
-        const numberGreaterThan = parseInt(filterNumberGreaterThanInput.value, 10);
+        const selectedInfoItem = filterSelect.value;
+        const number = parseInt(filterNumberInput.value, 10);
 
         errorDiv.textContent = '';
 
-        if (filterNumberLessThanInput.value !== '' && selectedInfoItemLessThan === '') {
-          errorDiv.textContent = 'Please select an info item for the less than filter.';
-          return;
-        }
-
-        if (filterNumberGreaterThanInput.value !== '' && selectedInfoItemGreaterThan === '') {
-          errorDiv.textContent = 'Please select an info item for the greater than filter.';
+        if (filterNumberInput.value !== '' && selectedInfoItem === '') {
+          errorDiv.textContent = 'Please select an info item to filter by.';
           return;
         }
 
         const filteredData = data.filter(item => {
           const matchesKeyword = (item.keyword && item.keyword.toLowerCase().includes(keyword)) || 
                                 (item.collection && item.collection.toLowerCase().includes(keyword));
-          const matchesNumberLessThan = isNaN(numberLessThan) || 
-            (item.info && item.info[selectedInfoItemLessThan] < numberLessThan);
-          const matchesNumberGreaterThan = isNaN(numberGreaterThan) || 
-            (item.info && item.info[selectedInfoItemGreaterThan] > numberGreaterThan);
+          const matchesNumber = isNaN(number) || 
+            (item.info && item.info[selectedInfoItem] < number);
 
           // Return true if the item matches the keyword and number filters
-          return matchesKeyword && 
-            ((selectedInfoItemLessThan && matchesNumberLessThan) || selectedInfoItemLessThan === '') &&
-            ((selectedInfoItemGreaterThan && matchesNumberGreaterThan) || selectedInfoItemGreaterThan === '');
+          return matchesKeyword && (matchesNumber || selectedInfoItem === '');
         });
 
         updateCounts(filteredData);
@@ -258,5 +250,3 @@
   </script>
 </body>
 </html>
-
-       
