@@ -1,0 +1,26 @@
+[
+  {
+    "collection": "https://checkout.oexpress.com/collections/liquidation",
+    "taxonomy": "80294",
+    "info": {
+      "productCount": 60,
+      "facetCount": 5,
+      "taxonomyFacetCount": 0,
+      "totalResults": 3640,
+      "outOfStockCount": 6256,
+      "apiCallTime": 949
+    }
+  },
+  {
+    "collection": "https://checkout.oexpress.com/collections/factory-direct",
+    "taxonomy": "81545",
+    "info": {
+      "productCount": 60,
+      "facetCount": 5,
+      "taxonomyFacetCount": 0,
+      "totalResults": 2444,
+      "outOfStockCount": 987,
+      "apiCallTime": 642
+    }
+  }
+]
